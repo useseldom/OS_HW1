@@ -12,7 +12,7 @@ asmlinkage int sys_cpu_uti(void)
 	old_fs = get_fs();
 	set_fs(KERNEL_DS);
 	
-	fp = filp_open("/proc/stat", O_RDONLY);
+	fp = filp_open("/proc/stat", O_RDONLY,0);
 	
 	char buf;
 	int count = 0;
@@ -20,14 +20,14 @@ asmlinkage int sys_cpu_uti(void)
 	while(count < 9){
 		fp->f_op->read(fp,buf,1,&fp->f_pos);
 		if(buf == '\0'){
-			ary[count] = num;
-			tmp = -1
+			cpu_1 = num;
+			tmp = -1;
 			num = 0;
 			break;
 		}
 		else if(buf == ' ' || buf == 'c' || buf == 'p' || buf == 'u'){
 			if(tmp != -1){
-				ary[count] = num;
+				cpu_1 += num;
 				tmp = -1;
 				num = 0;
 				count ++;
@@ -37,26 +37,24 @@ asmlinkage int sys_cpu_uti(void)
 		else{
 			tmp = 1;
 			num * 10;
-			num += buf - 48
+			num += buf - 48;
 		}
 	}
-	filp_close(fp);
+	filp_close(fp,0);
 	count = 0;	
-	for(int i=0;i<9;i++){
-		cpu_1 += ary[i];
-	}
 	idle_1 = ary[3];
 
-	fp = filp_open("/proc/stat", O_RDONLY);
+
+	fp = filp_open("/proc/stat", O_RDONLY , 0);
 	while(count < 9){
 		fp->f_op->read(fp,buf,1,&fp->f_pos);
 		if(buf == '\0'){
-			ary[count] = num;
+			cpu_2 += num;
 			break;
 		}
 		else if(buf == ' ' || buf == 'c' || buf == 'p' || buf == 'u'){
 			if(tmp != -1){
-				ary[count] = num;
+				cpu_2 += num;
 				tmp = -1;
 				num = 0;
 				count ++;
@@ -66,13 +64,10 @@ asmlinkage int sys_cpu_uti(void)
 		else{
 			tmp = 1;
 			num * 10;
-			num += buf - 48
+			num += buf - 48;
 		}
 	}
-	filp_close(fp);	
-	for(int i=0;i<9;i++){
-		cpu_2 += ary[i];
-	}
+	filp_close(fp,0);
 
 	set_fs(old_fs);
 	
