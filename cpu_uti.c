@@ -1,20 +1,24 @@
 #include<linux/kernel.h>
 #include<linux/linkage.h>
-#include<sys/types.h>
-#include<sys/stat.h>
-#include<fcntl.h>
+#include<linux/fs.h>
+#include<asm/uaccess.h>
 asmlinkage int sys_cpu_uti(void)
 {
 	long long ary[9];
 	long long cpu_1 = 0, cpu_2 = 0, idle_1;
-	FILE *fp;
-	fp = open("/proc/stat", O_RDONLY);
+	struct fILE *fp;
+
+	mm_segment_t old_fs;
+	old_fs = get_fs();
+	set_fs(KERNEL_DS);
+	
+	fp = filp_open("/proc/stat", O_RDONLY);
 	
 	char buf;
 	int count = 0;
 	long long tmp = -1,num = 0; 
 	while(count < 9){
-		read(fp,buf,1);
+		fp->f_op->read(fp,buf,1,&fp->f_pos);
 		if(buf == '\0'){
 			ary[count] = num;
 			tmp = -1
@@ -36,16 +40,16 @@ asmlinkage int sys_cpu_uti(void)
 			num += buf - 48
 		}
 	}
-	close(fp);
+	filp_close(fp);
 	count = 0;	
 	for(int i=0;i<9;i++){
 		cpu_1 += ary[i];
 	}
 	idle_1 = ary[3];
 
-	fp = open("/proc/stat", O_RDONLY);
+	fp = filp_open("/proc/stat", O_RDONLY);
 	while(count < 9){
-		read(fp,buf,1);
+		fp->f_op->read(fp,buf,1,&fp->f_pos);
 		if(buf == '\0'){
 			ary[count] = num;
 			break;
@@ -65,11 +69,12 @@ asmlinkage int sys_cpu_uti(void)
 			num += buf - 48
 		}
 	}
-	close(fp);	
+	filp_close(fp);	
 	for(int i=0;i<9;i++){
 		cpu_2 += ary[i];
 	}
-	
+
+	set_fs(old_fs);
 	
 	return (ary[3]-idle_1)*100/(cpu_2-cpu_1);
 }
