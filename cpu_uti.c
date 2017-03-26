@@ -6,7 +6,7 @@ asmlinkage int sys_cpu_uti(void)
 {
 	long long ary[9];
 	long long cpu_1 = 0, cpu_2 = 0, idle_1;
-	struct fILE *fp;
+	struct file *fp;
 
 	mm_segment_t old_fs;
 	old_fs = get_fs();
