@@ -12,7 +12,10 @@ asmlinkage int sys_cpu_uti(void)
 	set_fs(KERNEL_DS);
 	
 	fp = filp_open("/proc/stat", O_RDONLY,0);
-	
+	if(!fp){
+		printk("open error");
+	}
+
 	char buf;
 	int count = 0;
 	long long tmp = -1,num = 0; 
@@ -43,11 +46,14 @@ asmlinkage int sys_cpu_uti(void)
 		}
 	}
 	filp_close(fp,0);
-	count = 0;	
-	idle_1 = ary[3];
 
+	count = 0;	
 
 	fp = filp_open("/proc/stat", O_RDONLY , 0);
+	if(!fp){
+		printk("open error");
+	}
+
 	while(count < 9){
 		fp->f_op->read(fp,buf,1,&fp->f_pos);
 		if(buf == '\0'){
