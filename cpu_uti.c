@@ -4,8 +4,7 @@
 #include<asm/uaccess.h>
 asmlinkage int sys_cpu_uti(void)
 {
-	long long ary[9];
-	long long cpu_1 = 0, cpu_2 = 0, idle_1;
+	long long cpu_1 = 0, cpu_2 = 0, idle_1, idle_2;
 	struct file *fp;
 
 	mm_segment_t old_fs;
@@ -20,13 +19,16 @@ asmlinkage int sys_cpu_uti(void)
 	while(count < 9){
 		fp->f_op->read(fp,buf,1,&fp->f_pos);
 		if(buf == '\0'){
-			cpu_1 = num;
+			cpu_1 += num;
 			tmp = -1;
 			num = 0;
 			break;
 		}
 		else if(buf == ' ' || buf == 'c' || buf == 'p' || buf == 'u'){
 			if(tmp != -1){
+				if(count == 3){
+					idle_1 = num;
+				}
 				cpu_1 += num;
 				tmp = -1;
 				num = 0;
@@ -54,6 +56,9 @@ asmlinkage int sys_cpu_uti(void)
 		}
 		else if(buf == ' ' || buf == 'c' || buf == 'p' || buf == 'u'){
 			if(tmp != -1){
+				if(count == 3){
+					idle_2 = num;
+				}
 				cpu_2 += num;
 				tmp = -1;
 				num = 0;
@@ -71,5 +76,5 @@ asmlinkage int sys_cpu_uti(void)
 
 	set_fs(old_fs);
 	
-	return (ary[3]-idle_1)*100/(cpu_2-cpu_1);
+	return ((cpu_2-cpu_1)-(idle_2-idle_1))*100/(cpu_2-cpu_1);
 }
